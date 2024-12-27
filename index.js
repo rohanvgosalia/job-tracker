@@ -11,8 +11,6 @@ const SECRET_KEY = 'your-secret-key';
 app.use(cors());
 app.use(express.json());
 
-const { Sequelize } = require('sequelize');
-
 // Use environment variables for database credentials
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
