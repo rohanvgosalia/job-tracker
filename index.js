@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -58,9 +57,9 @@ sequelize.sync({ alter: true }).then(() => console.log('Database synced!')).catc
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || user.password !== password) {
         return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    }    
     const token = jwt.sign({ email: user.email, function: user.function, roles: user.roles }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token, function: user.function, roles: user.roles });
 });
@@ -93,8 +92,7 @@ app.post('/api/superadmin/add-user', authenticate(['superadmin']), async (req, r
         return res.status(400).json({ error: 'At least one role must be assigned to a client' });
     }
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({ email, password: hashedPassword, function: userFunction, roles: roles || null });
+        const newUser = await User.create({ email, password, function: userFunction, roles: roles || null });
         res.status(201).json({ message: 'User created successfully', user: newUser });
     } catch (err) {
         res.status(500).json({ error: 'Error creating user' });
